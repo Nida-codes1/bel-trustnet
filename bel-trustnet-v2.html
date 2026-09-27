@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BEL TrustNet — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07111F; --card:#0D1B2A; --primary:#2DD4BF; --secondary:#38BDF8;
+  --success:#22C55E; --warning:#F59E0B; --danger:#EF4444;
+  --text:#F8FAFC; --text2:#94A3B8; --border:#1E3348;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; background-image:radial-gradient(circle at 1px 1px, rgba(148,163,184,.06) 1px, transparent 0); background-size:22px 22px;}
+.layout{display:flex; min-height:100vh;}
+.sidebar{width:230px; background:var(--card); border-right:1px solid var(--border); padding:20px 14px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;}
+.brand{display:flex; align-items:center; gap:8px; padding:8px 6px 12px; font-weight:800; font-size:16px;}
+.brand span.dot{color:var(--primary);}
+.badge{font-size:10px; color:var(--warning); border:1px solid var(--warning); border-radius:4px; padding:2px 6px; display:inline-block; margin:0 6px 16px;}
+.nav-item{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; color:var(--text2); cursor:pointer; font-size:13.5px; font-weight:500; margin-bottom:2px;}
+.nav-item:hover{background:#101f30; color:var(--text);}
+.nav-item.active{background:#132a3d; color:var(--primary); border:1px solid var(--border);}
+.sidebar-foot{margin-top:auto; font-size:12px; color:var(--text2); display:flex; align-items:center; gap:6px; padding:10px 6px;}
+.dot-live{width:7px; height:7px; border-radius:50%; background:var(--success); box-shadow:0 0 6px var(--success); flex-shrink:0;}
+.main{flex:1; padding:24px 32px; max-width:1120px;}
+.topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:10px;}
+.status-row{display:flex; gap:16px; font-size:12px; color:var(--text2);}
+.status-row span{display:flex; align-items:center; gap:6px;}
+h1{font-size:22px; font-weight:700;}
+.sub{color:var(--text2); font-size:13px; margin-top:4px;}
+.card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px;}
+.grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:18px 0;}
+.stat-num{font-size:26px; font-weight:800; color:var(--primary);}
+.stat-label{font-size:12px; color:var(--text2); margin-top:4px;}
+.section-title{font-size:14px; font-weight:700; margin:22px 0 10px; color:var(--text2); text-transform:uppercase; letter-spacing:.5px;}
+.event-row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; gap:10px;}
+.event-row:last-child{border-bottom:none;}
+select,input,button{font-family:inherit; font-size:14px;}
+select,input{background:#0A1826; border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:7px; width:100%;}
+.btn{background:var(--primary); color:#022; border:none; padding:10px 18px; border-radius:7px; font-weight:700; cursor:pointer;}
+.btn:hover{filter:brightness(1.1);}
+.btn-outline{background:transparent; border:1px solid var(--border); color:var(--text);}
+.field{margin-bottom:14px;}
+.field label{display:block; font-size:12px; color:var(--text2); margin-bottom:6px;}
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th{text-align:left; color:var(--text2); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--border); font-size:11px; text-transform:uppercase;}
+td{padding:10px; border-bottom:1px solid var(--border);}
+tr.asset-row:hover{background:#0f1e2e; cursor:pointer;}
+.pill{font-size:11px; padding:2px 8px; border-radius:20px; font-weight:600;}
+.pill-restricted{background:rgba(239,68,68,.15); color:var(--danger);}
+.pill-confidential{background:rgba(245,158,11,.15); color:var(--warning);}
+.pill-active{background:rgba(34,197,94,.15); color:var(--success);}
+.pill-locked{background:rgba(239,68,68,.15); color:var(--danger);}
+.pill-assigned{background:rgba(56,189,248,.15); color:var(--secondary);}
+.result-box{margin-top:16px; border-radius:8px; padding:18px; border:1px solid; display:none;}
+.result-box.show{display:block;}
+.result-ok{border-color:var(--success); background:rgba(34,197,94,.08);}
+.result-bad{border-color:var(--danger); background:rgba(239,68,68,.08);}
+.check-line{display:flex; justify-content:space-between; font-size:13px; padding:5px 0; color:var(--text2); gap:10px;}
+.modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; max-width:440px; width:100%; max-height:85vh; overflow:auto;}
+.modal-close{float:right; cursor:pointer; color:var(--text2); font-size:18px;}
+.timeline-item{display:flex; gap:10px; padding-bottom:14px; position:relative;}
+.timeline-item::before{content:''; width:8px; height:8px; border-radius:50%; background:var(--primary); margin-top:5px; flex-shrink:0;}
+.timeline-item::after{content:''; position:absolute; left:3px; top:14px; bottom:0; width:1px; background:var(--border);}
+.timeline-item:last-child::after{display:none;}
+.toast-wrap{position:fixed; top:18px; right:18px; z-index:100; display:flex; flex-direction:column; gap:8px;}
+.toast{background:var(--card); border:1px solid var(--border); border-left:3px solid var(--primary); padding:12px 16px; border-radius:8px; font-size:13px; min-width:240px; animation:slide .2s ease;}
+@keyframes slide{from{transform:translateX(20px); opacity:0;} to{transform:translateX(0); opacity:1;}}
+.screen{display:none;}
+.screen.active{display:block; animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;} to{opacity:1;}}
+.step{display:flex; align-items:center; gap:10px; padding:8px 0; font-size:13px; color:var(--text2);}
+code.mono{font-family:monospace; font-size:12px; background:#0A1826; padding:8px 10px; border-radius:6px; display:block; margin:8px 0; color:var(--secondary); word-break:break-all;}
+.chain{display:flex; flex-direction:column; gap:0; align-items:center; margin:18px 0;}
+.chain-node{background:#0A1826; border:1px solid var(--border); border-radius:8px; padding:10px 20px; font-size:13px; font-weight:600; color:var(--text); width:100%; max-width:340px; text-align:center;}
+.chain-arrow{color:var(--primary); font-size:16px; padding:2px 0;}
+.tabs{display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid var(--border);}
+.tab{padding:9px 14px; font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; border-bottom:2px solid transparent;}
+.tab.active{color:var(--primary); border-bottom-color:var(--primary);}
+.tabpane{display:none;}
+.tabpane.active{display:block;}
+.chip{display:inline-block; background:#0A1826; border:1px solid var(--border); color:var(--secondary); font-size:12px; padding:5px 12px; border-radius:20px; margin:4px 6px 0 0;}
+.layer-row{display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px; background:#0A1826;}
+.layer-tag{font-size:11px; color:var(--primary); font-weight:700; width:110px; flex-shrink:0;}
+.bar-wrap{background:#0A1826; border-radius:6px; height:8px; overflow:hidden; margin-top:6px;}
+.bar{height:100%; background:var(--primary);}
+@media(max-width:820px){.layout{flex-direction:column;} .sidebar{width:100%; height:auto; position:static; flex-direction:row; overflow-x:auto;} .sidebar-foot{display:none;} .grid4{grid-template-columns:repeat(2,1fr);} .main{padding:18px;}}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="brand">◈ BEL <span class="dot">TRUSTNET</span></div>
+    <div class="badge">PROTOTYPE • SIMULATED</div>
+    <div class="nav-item active" data-screen="identity">🪪 Identity & DID</div>
+    <div class="nav-item" data-screen="dashboard">📊 Security Overview</div>
+    <div class="nav-item" data-screen="assets">📦 Asset Registry</div>
+    <div class="nav-item" data-screen="verify">🔍 Physical Verification</div>
+    <div class="nav-item" data-screen="access">🔐 Access Control</div>
+    <div class="nav-item" data-screen="audit">⛓ Audit Trail</div>
+    <div class="nav-item" data-screen="arch">🏛 Trust Architecture</div>
+    <div class="sidebar-foot"><span class="dot-live"></span> Prototype Network Online</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div style="font-weight:800; font-size:15px;">BEL TRUSTNET</div>
+        <div class="sub">Identity • Access • Asset Security</div>
+      </div>
+      <div class="status-row">
+        <span><span class="dot-live"></span> Identity Network</span>
+        <span><span class="dot-live"></span> Polygon Amoy (Simulated)</span>
+        <span><span class="dot-live"></span> Security Status</span>
+      </div>
+    </div>
+
+    <!-- IDENTITY -->
+    <div class="screen active" id="screen-identity">
+      <h1>Identity Verification</h1>
+      <div class="sub">DID-lite prototype — decentralized identifiers mapped to role & wallet</div>
+      <div class="card" style="margin-top:16px; max-width:420px;">
+        <div class="field"><label>Select sample identity</label><select id="identitySelect"></select></div>
+        <button class="btn" onclick="verifyIdentity()">VERIFY IDENTITY</button>
+        <div class="result-box result-ok" id="identityResult"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="screen" id="screen-dashboard">
+      <h1>Security Overview</h1>
+      <div class="sub">Live counts from simulated system state</div>
+      <div class="grid4" id="statGrid"></div>
+
+      <div class="section-title">Trust Chain</div>
+      <div class="card">
+        <div class="chain">
+          <div class="chain-node">IDENTITY — DID verified</div>
+          <div class="chain-arrow">↓</div>
+          <div class="chain-node">AUTHORIZATION — role checked on-chain</div>
+          <div class="chain-arrow">↓</div>
+          <div class="chain-node">DIGITAL ASSET — NFT record</div>
+          <div class="chain-arrow">↓</div>
+          <div class="chain-node">PHYSICAL VERIFICATION — ID match</div>
+          <div class="chain-arrow">↓</div>
+          <div class="chain-node">ACCOUNTABILITY — immutable audit event</div>
+        </div>
+      </div>
+
+      <div class="section-title">Recent Security Events</div>
+      <div class="card" id="eventsCard"></div>
+
+      <div class="section-title">System Integrity</div>
+      <div class="card">
+        <div class="check-line">Identity Registry <span style="color:var(--success)">✓ Operational</span></div>
+        <div class="check-line">Access Control Layer <span style="color:var(--success)">✓ Operational</span></div>
+        <div class="check-line">Asset Registry <span style="color:var(--success)">✓ Operational</span></div>
+        <div class="check-line">Audit Logging <span style="color:var(--success)">✓ Operational</span></div>
+      </div>
+    </div>
+
+    <!-- ASSETS -->
+    <div class="screen" id="screen-assets">
+      <h1>Asset Registry</h1>
+      <div class="sub">Digital & physical assets represented as NFT records</div>
+      <div class="field" style="max-width:300px; margin-top:14px;"><input id="assetSearch" placeholder="Search asset ID or name..." oninput="renderAssets()"></div>
+      <div class="card" style="overflow-x:auto;">
+        <table><thead><tr><th>Asset ID</th><th>Name</th><th>Type</th><th>Classification</th><th>Owner</th><th>Status</th></tr></thead>
+        <tbody id="assetTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- VERIFY -->
+    <div class="screen" id="screen-verify">
+      <h1>Physical ↔ Digital Asset Verification</h1>
+      <div class="sub">Compares the physical asset identifier against its registered digital/NFT record.</div>
+      <div class="card" style="margin-top:16px; max-width:480px;">
+        <div class="field"><label>Select / scan sample asset</label>
+          <select id="verifySelect">
+            <option value="R-2047">R-2047</option>
+            <option value="E-112">E-112</option>
+            <option value="T-031">T-031</option>
+            <option value="R-2048">R-2048 (unregistered)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" onclick="verifyPhysicalAsset()">VERIFY ASSET</button>
+          <button class="btn btn-outline" onclick="simulateMismatch()">SIMULATE MISMATCH</button>
+        </div>
+        <div class="result-box" id="verifyResult"></div>
+      </div>
+    </div>
+
+    <!-- ACCESS CONTROL -->
+    <div class="screen" id="screen-access">
+      <h1>Access Control</h1>
+      <div class="sub">Smart-contract-style role enforcement and time-bound authorization</div>
+      <div class="tabs">
+        <div class="tab active" data-tab="transfer">Transfer Authorization</div>
+        <div class="tab" data-tab="liveness">Liveness & Lease</div>
+      </div>
+
+      <div class="tabpane active" id="tab-transfer">
+        <div class="card" style="max-width:460px;">
+          <div class="field"><label>Acting user</label><select id="transferUser"></select></div>
+          <div class="field"><label>Asset</label><select id="transferAsset"></select></div>
+          <div class="field"><label>Transfer to</label><select id="transferTo"></select></div>
+          <div class="sub" id="transferRoleLine" style="margin-bottom:12px;"></div>
+          <button class="btn" onclick="requestTransfer()">REQUEST TRANSFER</button>
+          <div class="result-box" id="transferResult"></div>
+        </div>
+      </div>
+
+      <div class="tabpane" id="tab-liveness">
+        <div class="card" style="max-width:480px; margin-bottom:16px;">
+          <div class="section-title" style="margin-top:0;">Liveness — Dead-Man's-Switch</div>
+          <div class="check-line">User <span style="color:var(--text)">Arjun Rao</span></div>
+          <div class="check-line">Last check-in <span id="lastCheckin" style="color:var(--text)">2 hours ago</span></div>
+          <div class="check-line">Required interval <span style="color:var(--text)">24 hours</span></div>
+          <div class="check-line">Access remaining <span id="accessRemaining" style="color:var(--success)">22 hours</span></div>
+          <div class="check-line">Backup custodian <span style="color:var(--text)">Rahul Sharma</span></div>
+          <div class="bar-wrap"><div class="bar" id="livenessBar" style="width:92%;"></div></div>
+          <div style="display:flex; gap:10px; margin-top:14px;">
+            <button class="btn" onclick="checkInLiveness()">CHECK IN / PROVE LIVENESS</button>
+            <button class="btn btn-outline" onclick="expireLiveness()">SIMULATE EXPIRY</button>
+          </div>
+          <div class="result-box" id="livenessResult"></div>
+        </div>
+
+        <div class="card" style="max-width:480px;">
+          <div class="section-title" style="margin-top:0;">Time-Bound Access Lease</div>
+          <div class="check-line">Asset <span style="color:var(--text)">Secure Firmware Package (S-091)</span></div>
+          <div class="check-line">User <span style="color:var(--text)">Vikram Nair</span></div>
+          <div class="check-line">Permission <span style="color:var(--text)">ACCESS</span></div>
+          <div class="check-line">Valid until <span style="color:var(--text)">28 Sep 2026 18:00</span></div>
+          <div class="check-line">Status <span id="leaseStatus" style="color:var(--success)">ACTIVE</span></div>
+          <button class="btn btn-outline" style="margin-top:10px;" onclick="expireLease()">SIMULATE EXPIRY</button>
+          <div class="result-box" id="leaseResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="screen" id="screen-audit">
+      <h1>Immutable Audit Trail</h1>
+      <div class="sub">Prototype representation of Polygon Amoy contract events — not a live chain</div>
+      <div class="card" style="overflow-x:auto; margin-top:16px;">
+        <table><thead><tr><th>Time</th><th>Event</th><th>Actor</th><th>Asset</th><th>Result</th><th></th></tr></thead>
+        <tbody id="auditTableBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ARCHITECTURE -->
+    <div class="screen" id="screen-arch">
+      <h1>Trust Architecture</h1>
+      <div class="sub">Intended production architecture — this prototype simulates these layers in JavaScript</div>
+      <div class="card" style="margin-top:16px;">
+        <div class="layer-row"><div class="layer-tag">IDENTITY</div><div class="sub">DID-lite identifiers, wallet-bound roles → IdentityRegistry contract</div></div>
+        <div class="layer-row"><div class="layer-tag">ACCESS</div><div class="sub">RBAC enforced on-chain → AccessControlManager (OpenZeppelin)</div></div>
+        <div class="layer-row"><div class="layer-tag">ASSET</div><div class="sub">ERC-721 asset records with classification metadata → AssetRegistry</div></div>
+        <div class="layer-row"><div class="layer-tag">VERIFICATION</div><div class="sub">Physical identifier ↔ NFT record cross-check</div></div>
+        <div class="layer-row"><div class="layer-tag">AUDIT</div><div class="sub">Immutable event log emitted by contract transactions</div></div>
+      </div>
+      <div class="section-title">Technology Stack</div>
+      <div class="card">
+        <span class="chip">Polygon Amoy</span><span class="chip">Solidity</span><span class="chip">OpenZeppelin</span>
+        <span class="chip">IPFS / Pinata</span><span class="chip">React</span><span class="chip">ethers.js</span><span class="chip">MetaMask</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="assetModalBg"><div class="modal" id="assetModal"></div></div>
+<div class="modal-bg" id="txModalBg"><div class="modal" id="txModal"></div></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ===================== DATA ===================== */
+const users = [
+  {name:'Priya Menon', did:'did:bel:admin-001', role:'ADMIN', dept:'Security Administration', wallet:'0xA81F...29D1'},
+  {name:'Rahul Sharma', did:'did:bel:manager-001', role:'MANAGER', dept:'Radar Systems', wallet:'0xB72A...81F2'},
+  {name:'Sneha Rao', did:'did:bel:auditor-001', role:'AUDITOR', dept:'Security Audit', wallet:'0xC93B...72A4'},
+  {name:'Arjun Rao', did:'did:bel:user-001', role:'USER', dept:'Radar Systems', wallet:'0xD84C...63B5'},
+  {name:'Aisha Khan', did:'did:bel:user-002', role:'USER', dept:'Avionics', wallet:'0xE15D...54C6'},
+  {name:'Vikram Nair', did:'did:bel:user-003', role:'USER', dept:'Secure Communications', wallet:'0xF26E...45D7'}
+];
+let assets = [
+  {id:'R-2047', nft:'NFT-0002047', name:'Radar Module', type:'Physical', class:'RESTRICTED', owner:'Arjun Rao', status:'Assigned', hash:'8F72...AC91', timeline:['Asset Minted','Assigned to BEL Radar Lab','Assigned to Arjun Rao','Access Verified']},
+  {id:'E-112', nft:'NFT-0000112', name:'Encryption Unit', type:'Physical', class:'RESTRICTED', owner:'Rahul Sharma', status:'Locked', hash:'3C91...D204', timeline:['Asset Minted','Assigned to BEL Lab B','Locked for review']},
+  {id:'T-031', nft:'NFT-0000031', name:'Test Equipment', type:'Physical', class:'CONFIDENTIAL', owner:'Rahul Sharma', status:'Active', hash:'A192...5B77', timeline:['Asset Minted','Assigned to Rahul Sharma']},
+  {id:'D-087', nft:'NFT-0000087', name:'Radar Design Document', type:'Digital', class:'RESTRICTED', owner:'Radar Division', status:'Active', hash:'7D40...E912', timeline:['Asset Minted','Assigned to Radar Division']},
+  {id:'C-204', nft:'NFT-0000204', name:'Communication Unit', type:'Physical', class:'CONFIDENTIAL', owner:'Aisha Khan', status:'Active', hash:'9F03...11CC', timeline:['Asset Minted','Assigned to Aisha Khan']},
+  {id:'S-091', nft:'NFT-0000091', name:'Secure Firmware Package', type:'Digital', class:'RESTRICTED', owner:'Vikram Nair', status:'Active', hash:'C821...4F0A', timeline:['Asset Minted','Assigned to Vikram Nair']},
+  {id:'B-014', nft:'NFT-0000014', name:'Battery Module', type:'Physical', class:'CONFIDENTIAL', owner:'Aisha Khan', status:'Active', hash:'1AB4...C723', timeline:['Asset Minted','Assigned to Aisha Khan']},
+  {id:'N-062', nft:'NFT-0000062', name:'Network Access Card', type:'Digital', class:'RESTRICTED', owner:'Priya Menon', status:'Active', hash:'6E02...9D18', timeline:['Asset Minted','Assigned to Priya Menon']},
+  {id:'V-205', nft:'NFT-0000205', name:'Vault Firmware Key', type:'Digital', class:'RESTRICTED', owner:'Vikram Nair', status:'Active', hash:'F310...77AB', timeline:['Asset Minted','Assigned to Vikram Nair']},
+  {id:'A-330', nft:'NFT-0000330', name:'Avionics Sensor Array', type:'Physical', class:'CONFIDENTIAL', owner:'Aisha Khan', status:'Active', hash:'2B87...E501', timeline:['Asset Minted','Assigned to Aisha Khan']}
+];
+let auditEvents = [
+  {t:'13:40:02', ev:'IDENTITY_VERIFIED', actor:'Arjun Rao', asset:'—', result:'SUCCESS', tx:'0x51A...20C'},
+  {t:'13:52:19', ev:'ASSET_VERIFIED', actor:'System', asset:'S-091', result:'VERIFIED', tx:'0x64F...83E'},
+  {t:'14:02:11', ev:'TRANSFER_ATTEMPT', actor:'Sneha Rao', asset:'R-2047', result:'BLOCKED', tx:'0x7A2...91F'}
+];
+const permissions = { ADMIN:['transfer'], MANAGER:['transfer'], AUDITOR:[], USER:[] };
+let successfulTransfers = 1, securityEvents = 3, blockedActions = 1;
+
+/* ===================== UTIL ===================== */
+function toast(msg, color){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className='toast'; el.style.borderLeftColor = color || 'var(--primary)';
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+function pillClass(v){
+  v=v.toLowerCase();
+  return {restricted:'pill-restricted',confidential:'pill-confidential',active:'pill-active',locked:'pill-locked',assigned:'pill-assigned'}[v]||'';
+}
+function nowTime(){ return new Date().toLocaleTimeString('en-GB'); }
+function randHash(){ return '0x'+Math.random().toString(16).slice(2,6).toUpperCase()+'...'+Math.random().toString(16).slice(2,5).toUpperCase(); }
+function addAuditEvent(ev, actor, asset, result){
+  auditEvents.unshift({t:nowTime(), ev, actor, asset, result, tx:randHash()});
+  renderAuditTrail();
+}
+
+/* ===================== NAV + TABS ===================== */
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('screen-'+item.dataset.screen).classList.add('active');
+    if(item.dataset.screen==='dashboard') renderDashboard();
+    if(item.dataset.screen==='assets') renderAssets();
+    if(item.dataset.screen==='audit') renderAuditTrail();
+  });
+});
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tabpane').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+/* ===================== IDENTITY ===================== */
+const identitySelect = document.getElementById('identitySelect');
+users.forEach((u,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=`${u.name} — ${u.role.charAt(0)+u.role.slice(1).toLowerCase()}`; identitySelect.appendChild(o); });
+function verifyIdentity(){
+  const u = users[identitySelect.value];
+  const box = document.getElementById('identityResult');
+  box.className = 'result-box result-ok show';
+  box.innerHTML = `<div style="color:var(--success); font-weight:700; margin-bottom:10px;">✓ Cryptographic identity verified</div>
+    <div class="check-line">DID <span style="color:var(--text)">${u.did}</span></div>
+    <div class="check-line">Role <span style="color:var(--text)">${u.role}</span></div>
+    <div class="check-line">Department <span style="color:var(--text)">${u.dept}</span></div>
+    <div class="check-line">Wallet <span style="color:var(--text)">${u.wallet}</span></div>
+    <div class="check-line">Credential status <span style="color:var(--success)">VALID</span></div>`;
+  toast(`Identity verified: ${u.name}`, 'var(--success)');
+  addAuditEvent('IDENTITY_VERIFIED', u.name, '—', 'SUCCESS');
+}
+
+/* ===================== DASHBOARD ===================== */
+function renderDashboard(){
+  document.getElementById('statGrid').innerHTML = `
+    <div class="card"><div class="stat-num">${users.length}</div><div class="stat-label">Registered Identities</div></div>
+    <div class="card"><div class="stat-num">${assets.length}</div><div class="stat-label">Registered Assets</div></div>
+    <div class="card"><div class="stat-num">${blockedActions}</div><div class="stat-label">Blocked Actions</div></div>
+    <div class="card"><div class="stat-num">${securityEvents}</div><div class="stat-label">Security Events</div></div>`;
+  document.getElementById('eventsCard').innerHTML = `
+    <div class="event-row"><span>🔴 Unauthorized transfer attempt — R-2047, Sneha Rao</span><span style="color:var(--danger)">BLOCKED</span></div>
+    <div class="event-row"><span>🟢 Authorized transfer — T-031, Rahul Sharma</span><span style="color:var(--success)">SUCCESS</span></div>
+    <div class="event-row"><span>🔴 Physical/Digital mismatch — R-2047</span><span style="color:var(--danger)">BLOCKED</span></div>
+    <div class="event-row"><span>🟠 Liveness interval nearing expiry — Arjun Rao</span><span style="color:var(--warning)">MONITOR</span></div>`;
+}
+renderDashboard();
+
+/* ===================== ASSETS ===================== */
+function renderAssets(){
+  const q = (document.getElementById('assetSearch')?.value || '').toLowerCase();
+  const body = document.getElementById('assetTableBody'); body.innerHTML='';
+  assets.filter(a=>a.id.toLowerCase().includes(q)||a.name.toLowerCase().includes(q)).forEach(a=>{
+    const tr=document.createElement('tr'); tr.className='asset-row'; tr.onclick=()=>openAssetModal(a.id);
+    tr.innerHTML=`<td>${a.id}</td><td>${a.name}</td><td>${a.type}</td><td><span class="pill ${pillClass(a.class)}">${a.class}</span></td><td>${a.owner}</td><td><span class="pill ${pillClass(a.status)}">${a.status}</span></td>`;
+    body.appendChild(tr);
+  });
+}
+function openAssetModal(id){
+  const a = assets.find(x=>x.id===id);
+  document.getElementById('assetModal').innerHTML = `
+    <span class="modal-close" onclick="closeModal('assetModalBg')">✕</span>
+    <div style="font-weight:800; font-size:16px; margin-bottom:4px;">${a.name.toUpperCase()} ${a.id}</div>
+    <div class="check-line">NFT ID <span style="color:var(--text)">${a.nft}</span></div>
+    <div class="check-line">Asset Hash <span style="color:var(--secondary)">${a.hash}</span></div>
+    <div class="check-line">Owner <span style="color:var(--text)">${a.owner}</span></div>
+    <div class="check-line">Classification <span class="pill ${pillClass(a.class)}">${a.class}</span></div>
+    <div class="check-line">Physical Verification <span style="color:var(--success)">✓ VERIFIED</span></div>
+    <div class="check-line">Digital Verification <span style="color:var(--success)">✓ VERIFIED</span></div>
+    <div class="section-title" style="margin-top:16px;">Ownership Timeline</div>
+    ${a.timeline.map(t=>`<div class="timeline-item">${t}</div>`).join('')}`;
+  document.getElementById('assetModalBg').classList.add('show');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+renderAssets();
+
+/* ===================== VERIFY ===================== */
+function verifyPhysicalAsset(){
+  const id = document.getElementById('verifySelect').value;
+  const a = assets.find(x=>x.id===id);
+  const box = document.getElementById('verifyResult');
+  if(!a){
+    box.className='result-box result-bad show';
+    box.innerHTML = `<div style="color:var(--danger); font-weight:700;">🔴 ASSET NOT FOUND IN REGISTRY</div><div class="sub" style="margin-top:6px;">"${id}" has no matching blockchain record.</div>`;
+    addAuditEvent('ASSET_VERIFIED', 'System', id, 'NOT FOUND'); toast('Asset not found', 'var(--danger)'); return;
+  }
+  box.className='result-box result-ok show';
+  box.innerHTML = `<div style="color:var(--success); font-weight:800; font-size:16px; margin-bottom:8px;">✓ ASSET VERIFIED</div>
+    <div class="check-line">Physical ID <span style="color:var(--text)">${a.id}</span></div>
+    <div class="check-line">Digital/NFT ID <span style="color:var(--text)">${a.id}</span></div>
+    <div class="check-line">Owner <span style="color:var(--text)">${a.owner}</span></div>
+    <div class="check-line">Classification <span class="pill ${pillClass(a.class)}">${a.class}</span></div><hr style="border-color:var(--border); margin:10px 0;">
+    <div class="check-line">Physical Identity <span style="color:var(--success)">✓</span></div>
+    <div class="check-line">Digital Identity <span style="color:var(--success)">✓</span></div>
+    <div class="check-line">Ownership <span style="color:var(--success)">✓</span></div>`;
+  addAuditEvent('ASSET_VERIFIED', 'System', a.id, 'VERIFIED'); toast(`Asset ${a.id} verified`, 'var(--success)');
+}
+function simulateMismatch(){
+  const box = document.getElementById('verifyResult');
+  box.className='result-box result-bad show';
+  box.innerHTML = `<div style="color:var(--danger); font-weight:800; font-size:16px; margin-bottom:8px;">🔴 ASSET MISMATCH DETECTED</div>
+    <div class="check-line">Physical ID <span style="color:var(--text)">R-2047</span></div>
+    <div class="check-line">Digital Record <span style="color:var(--danger)">R-2048</span></div>
+    <div class="sub" style="margin:10px 0 6px;">Possible causes: unauthorized replacement, tampering, counterfeit asset, incorrect registration</div><hr style="border-color:var(--border); margin:10px 0;">
+    <div class="check-line">Transfer Status <span style="color:var(--danger)">🔒 BLOCKED</span></div>
+    <div class="check-line">Security Alert <span style="color:var(--warning)">Generated</span></div>`;
+  securityEvents++; blockedActions++;
+  addAuditEvent('ASSET_MISMATCH', 'System', 'R-2047', 'ALERT'); toast('Mismatch detected — transfer blocked', 'var(--danger)');
+}
+
+/* ===================== TRANSFER ===================== */
+const transferUser=document.getElementById('transferUser'), transferAsset=document.getElementById('transferAsset'), transferTo=document.getElementById('transferTo');
+users.forEach((u,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=`${u.name} (${u.role})`; transferUser.appendChild(o); });
+users.forEach((u,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=u.name; transferTo.appendChild(o); });
+function refreshAssetSelect(){ transferAsset.innerHTML=''; assets.forEach(a=>{ const o=document.createElement('option'); o.value=a.id; o.textContent=`${a.id} — ${a.name}`; transferAsset.appendChild(o); }); }
+refreshAssetSelect(); transferUser.value=2;
+function updateRoleLine(){ transferRoleLine.textContent = `Current role: ${users[transferUser.value].role}`; }
+transferUser.addEventListener('change', updateRoleLine); updateRoleLine();
+function requestTransfer(){
+  const actor=users[transferUser.value], asset=assets.find(a=>a.id===transferAsset.value), toUser=users[transferTo.value];
+  const box=document.getElementById('transferResult'); const allowed=permissions[actor.role].includes('transfer');
+  let steps = `<div class="step">✓ Identity verification</div><div class="step">✓ Role verification</div><div class="step">✓ Asset classification check</div><div class="step">${allowed?'✓':'✗'} Smart contract authorization</div>`;
+  if(!allowed){
+    box.className='result-box result-bad show';
+    box.innerHTML = steps + `<div style="color:var(--danger); font-weight:800; margin-top:10px;">🔴 TRANSFER REJECTED</div>
+      <div class="sub" style="margin:6px 0;">Role ${actor.role} is not authorized to transfer ${asset.class} assets.</div>
+      <div class="check-line">Required Role <span style="color:var(--text)">MANAGER or ADMIN</span></div>
+      <div class="check-line">Actual Role <span style="color:var(--danger)">${actor.role}</span></div>
+      <div class="section-title" style="margin-top:12px;">Smart Contract Simulation</div>
+      <code class="mono">require(hasRole(MANAGER_ROLE))</code>
+      <div class="check-line">Result <span style="color:var(--danger)">FALSE</span></div>
+      <div class="check-line">Transaction <span style="color:var(--danger)">REVERTED</span></div>`;
+    securityEvents++; blockedActions++;
+    addAuditEvent('TRANSFER_ATTEMPT', actor.name, asset.id, 'BLOCKED'); toast('Transfer rejected', 'var(--danger)'); return;
+  }
+  asset.owner = toUser.name; successfulTransfers++;
+  box.className='result-box result-ok show';
+  box.innerHTML = steps + `<div style="color:var(--success); font-weight:800; margin-top:10px;">🟢 TRANSFER AUTHORIZED</div>
+    <div class="sub" style="margin:6px 0;">Ownership updated: ${asset.id} → ${toUser.name}</div>
+    <div class="check-line">Transaction Hash <span style="color:var(--secondary)">${randHash()}</span></div>
+    <div class="check-line">Status <span style="color:var(--success)">CONFIRMED (simulated)</span></div>`;
+  addAuditEvent('ASSET_TRANSFER', actor.name, asset.id, 'SUCCESS'); toast(`Transfer successful`, 'var(--success)'); renderAssets();
+}
+
+/* ===================== LIVENESS / LEASE ===================== */
+function checkInLiveness(){
+  document.getElementById('lastCheckin').textContent = 'Just now';
+  document.getElementById('accessRemaining').textContent = '24 hours';
+  document.getElementById('accessRemaining').style.color = 'var(--success)';
+  document.getElementById('livenessBar').style.width = '100%';
+  const box = document.getElementById('livenessResult');
+  box.className='result-box result-ok show';
+  box.innerHTML = `<div style="color:var(--success); font-weight:700;">✓ Liveness proven</div><div class="sub">Check-in interval reset. Access remains active.</div>`;
+  addAuditEvent('LIVENESS_CHECK', 'Arjun Rao', '—', 'SUCCESS'); toast('Liveness check-in recorded', 'var(--success)');
+}
+function expireLiveness(){
+  document.getElementById('accessRemaining').textContent = '0 hours';
+  document.getElementById('accessRemaining').style.color = 'var(--danger)';
+  document.getElementById('livenessBar').style.width = '0%';
+  const box = document.getElementById('livenessResult');
+  box.className='result-box result-bad show';
+  box.innerHTML = `<div style="color:var(--danger); font-weight:700;">🔴 ACCESS REVOKED</div>
+    <div class="sub" style="margin:6px 0;">Check-in interval exceeded. Asset locked. Backup custodian Rahul Sharma may be assigned.</div>`;
+  securityEvents++; blockedActions++;
+  addAuditEvent('ACCESS_EXPIRED', 'Arjun Rao', '—', 'REVOKED'); toast('Liveness expired — access revoked', 'var(--danger)');
+}
+function expireLease(){
+  document.getElementById('leaseStatus').textContent = 'EXPIRED'; document.getElementById('leaseStatus').style.color='var(--danger)';
+  const box = document.getElementById('leaseResult');
+  box.className='result-box result-bad show';
+  box.innerHTML = `<div style="color:var(--danger); font-weight:700;">🔴 ACCESS EXPIRED</div><div class="sub">Authorization revoked for Vikram Nair on S-091.</div>`;
+  addAuditEvent('ACCESS_EXPIRED', 'Vikram Nair', 'S-091', 'REVOKED'); toast('Lease expired', 'var(--danger)');
+}
+
+/* ===================== AUDIT ===================== */
+function renderAuditTrail(){
+  const body=document.getElementById('auditTableBody'); body.innerHTML='';
+  auditEvents.forEach((e,i)=>{
+    const color = (e.result==='SUCCESS'||e.result==='VERIFIED') ? 'var(--success)' : (e.result==='BLOCKED'||e.result==='ALERT'||e.result==='NOT FOUND'||e.result==='REVOKED' ? 'var(--danger)' : 'var(--warning)');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${e.t}</td><td>${e.ev}</td><td>${e.actor}</td><td>${e.asset}</td><td style="color:${color}; font-weight:600;">${e.result}</td>
+      <td><button class="btn btn-outline" style="padding:5px 10px; font-size:12px;" onclick="openTxModal(${i})">View</button></td>`;
+    body.appendChild(tr);
+  });
+}
+function openTxModal(i){
+  const e = auditEvents[i];
+  document.getElementById('txModal').innerHTML = `<span class="modal-close" onclick="closeModal('txModalBg')">✕</span>
+    <div style="font-weight:800; margin-bottom:10px;">Transaction Detail (simulated)</div>
+    <div class="check-line">Network <span style="color:var(--text)">Polygon Amoy — Prototype</span></div>
+    <div class="check-line">Transaction Hash <span style="color:var(--secondary)">${e.tx}</span></div>
+    <div class="check-line">Contract <span style="color:var(--text)">AccessControlManager</span></div>
+    <div class="check-line">Event <span style="color:var(--text)">${e.ev}</span></div>
+    <div class="check-line">Actor <span style="color:var(--text)">${e.actor}</span></div>
+    <div class="check-line">Asset <span style="color:var(--text)">${e.asset}</span></div>
+    <div class="check-line">Timestamp <span style="color:var(--text)">${e.t}</span></div>
+    <div class="check-line">Result <span style="color:var(--text)">${e.result}</span></div>`;
+  document.getElementById('txModalBg').classList.add('show');
+}
+renderAuditTrail();
+</script>
+</body>
+</html>
